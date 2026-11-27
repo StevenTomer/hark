@@ -14,6 +14,7 @@ import org.hark.domain.Source
 import org.hark.domain.SpeechText
 import org.hark.domain.Sources
 import org.hark.domain.StyleMessage
+import java.time.LocalTime
 
 /** Watches message notifications from the SMS app and Google Voice and hands new ones to the speaker. */
 class HarkListenerService : NotificationListenerService() {
@@ -30,8 +31,14 @@ class HarkListenerService : NotificationListenerService() {
         val fresh = container.deduper.filterNew(snapshot.key, messages, System.currentTimeMillis())
         if (fresh.isEmpty()) return
         val app = if (source == Source.VOICE) "Google Voice message" else "Text message"
+        val now = LocalTime.now()
+        val quiet = settings.quietHours.isQuiet(now.hour * 60 + now.minute)
         main.post {
-            fresh.forEach { container.speaker.speak(SpeechText.format(it), "$app from ${it.sender}") }
+            fresh.forEach {
+                val label = "$app from ${it.sender}"
+                if (quiet) container.speaker.note("$label not read: quiet hours")
+                else container.speaker.speak(SpeechText.format(it), label)
+            }
         }
     }
 

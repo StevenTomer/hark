@@ -20,7 +20,8 @@ Each message is read as "Message from *sender*: *text*". In group chats it adds 
 - Speech is first turned into an audio file by the phone's text-to-speech engine. It is then played with the Bluetooth device pinned as the output.
   - Playback stays muted until Android confirms the audio is routed to that device.
   - If the route ever moves elsewhere (for example the earbuds disconnect mid-sentence), playback is muted and stopped.
-- Messages that arrive while no Bluetooth audio is connected, or during a call, are skipped, not saved for later.
+- Messages that arrive while no Bluetooth audio is connected, during a call, or during **quiet hours** (an optional daily window, such as 10 PM–7 AM), are skipped, not saved for later.
+- Hark never dismisses or marks anything read: notifications stay in the shade.
 - Bluetooth hands-free (SCO, call audio) is not used, so Hark won't take over the call channel.
 - Music ducks briefly while a message is read. Volume follows the media volume.
 

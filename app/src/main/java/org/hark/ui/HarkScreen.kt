@@ -36,6 +36,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.hark.appContainer
 import org.hark.audio.displayName
+import org.hark.domain.QuietHours
+import android.app.TimePickerDialog
+import android.text.format.DateFormat
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import androidx.compose.ui.platform.LocalLocale
 
 private val Colors = darkColorScheme(
@@ -94,6 +100,11 @@ fun HarkScreen(accessGranted: StateFlow<Boolean>, onOpenAccess: () -> Unit, onOp
                     events.forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
                 }
 
+                QuietHoursSection(settings.quietHours,
+                    onEnabled = { scope.launch { container.settings.setQuietEnabled(it) } },
+                    onStart = { scope.launch { container.settings.setQuietStart(it) } },
+                    onEnd = { scope.launch { container.settings.setQuietEnd(it) } })
+
                 Section {
                     Text("Read messages from", style = MaterialTheme.typography.titleMedium)
                     ToggleRow("Text messages (SMS / Google Messages)", settings.readSms) { scope.launch { container.settings.setReadSms(it) } }
@@ -115,6 +126,34 @@ fun HarkScreen(accessGranted: StateFlow<Boolean>, onOpenAccess: () -> Unit, onOp
                     }) { Text("Speak a test message") }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun QuietHoursSection(quiet: QuietHours, onEnabled: (Boolean) -> Unit, onStart: (Int) -> Unit, onEnd: (Int) -> Unit) {
+    val context = LocalContext.current
+    val formatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(LocalLocale.current.platformLocale)
+    fun label(minute: Int) = LocalTime.of(minute / 60, minute % 60).format(formatter)
+    fun pick(minute: Int, onPicked: (Int) -> Unit) {
+        TimePickerDialog(context, { _, hour, min -> onPicked(hour * 60 + min) },
+            minute / 60, minute % 60, DateFormat.is24HourFormat(context)).show()
+    }
+    Section {
+        ToggleRow("Quiet hours", quiet.enabled, onEnabled)
+        Text(
+            "Messages that arrive between these times are not read aloud (they stay in your notifications).",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("From", Modifier.width(48.dp))
+            OutlinedButton(onClick = { pick(quiet.startMinute, onStart) }, enabled = quiet.enabled) { Text(label(quiet.startMinute)) }
+            Spacer(Modifier.width(12.dp))
+            Text("to", Modifier.width(28.dp))
+            OutlinedButton(onClick = { pick(quiet.endMinute, onEnd) }, enabled = quiet.enabled) { Text(label(quiet.endMinute)) }
+        }
+        if (quiet.enabled && quiet.startMinute == quiet.endMinute) {
+            Text("Start and end are the same, so there are no quiet hours.", style = MaterialTheme.typography.bodySmall)
         }
     }
 }
