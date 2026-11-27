@@ -11,7 +11,10 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import android.util.Log
 import java.io.File
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
@@ -29,7 +32,9 @@ class Speaker(
     private val handler = Handler(Looper.getMainLooper())
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val player = RoutedPlayer(context)
-    private val queue = ArrayDeque<String>()
+    private data class Item(val text: String, val label: String)
+    private val queue = ArrayDeque<Item>()
+    private var currentLabel = "Message"
     private var engine: TextToSpeech? = null
     private var engineReady = false
     private var busy = false
@@ -37,9 +42,10 @@ class Speaker(
     private var utteranceCounter = 0
     private var focusRequest: AudioFocusRequest? = null
 
-    private val _lastEvent = MutableStateFlow<String?>(null)
-    /** A short human-readable note of what happened to the most recent message, shown in the app. */
-    val lastEvent: StateFlow<String?> = _lastEvent
+    private val _events = MutableStateFlow<List<String>>(emptyList())
+    /** Recent activity, newest first, shown in the app so a silent message can be explained. */
+    val events: StateFlow<List<String>> = _events
+    private val clock = DateTimeFormatter.ofPattern("HH:mm:ss")
 
     private val attributes = AudioAttributes.Builder()
         .setUsage(AudioAttributes.USAGE_MEDIA)
@@ -59,7 +65,7 @@ class Speaker(
             note("$label not read: a call is in progress")
             return false
         }
-        queue.addLast(text)
+        queue.addLast(Item(text, label))
         ensureEngine()
         pump()
         return true
@@ -75,7 +81,10 @@ class Speaker(
         abandonFocus()
     }
 
-    private fun note(text: String) { _lastEvent.value = text }
+    fun note(text: String) {
+        Log.i(TAG, text)
+        _events.value = (listOf("${LocalTime.now().format(clock)}  $text") + _events.value).take(MAX_EVENTS)
+    }
 
     private fun ensureEngine() {
         if (engine != null) return
@@ -104,14 +113,15 @@ class Speaker(
     private fun pump() {
         if (busy || !engineReady) return
         val tts = engine ?: return
-        val text = queue.removeFirstOrNull() ?: run { abandonFocus(); return }
+        val item = queue.removeFirstOrNull() ?: run { abandonFocus(); return }
+        currentLabel = item.label
         if (bluetooth.find() == null || bluetooth.inCall()) { clear(); return }
         val file = runCatching { File.createTempFile("hark-", ".wav", context.cacheDir) }.getOrNull() ?: return
         busy = true
         currentFile = file
         val id = "hark-${++utteranceCounter}"
         tts.setSpeechRate(speechRate())
-        if (tts.synthesizeToFile(text, null, file, id) != TextToSpeech.SUCCESS) failed(id, "speech synthesis failed")
+        if (tts.synthesizeToFile(item.text, null, file, id) != TextToSpeech.SUCCESS) failed(id, "speech synthesis failed")
     }
 
     private fun isCurrent(utteranceId: String?) = busy && utteranceId == "hark-$utteranceCounter"
@@ -123,12 +133,12 @@ class Speaker(
         if (output == null || bluetooth.inCall()) { clear(); return }
         requestFocus()
         player.play(Uri.fromFile(file), output,
-            onFailure = { finished("Not read: audio would not route to ${output.displayName}") },
-            onComplete = { finished("Read aloud on ${output.displayName}") })
+            onFailure = { reason -> finished("$currentLabel not read: $reason") },
+            onComplete = { finished("$currentLabel read aloud on ${output.displayName}") })
     }
 
     private fun failed(utteranceId: String?, reason: String) {
-        if (isCurrent(utteranceId)) finished("Not read: $reason")
+        if (isCurrent(utteranceId)) finished("$currentLabel not read: $reason")
     }
 
     private fun finished(event: String) {
@@ -153,5 +163,10 @@ class Speaker(
     private fun abandonFocus() {
         focusRequest?.let { audioManager.abandonAudioFocusRequest(it) }
         focusRequest = null
+    }
+
+    private companion object {
+        const val TAG = "Hark"
+        const val MAX_EVENTS = 12
     }
 }

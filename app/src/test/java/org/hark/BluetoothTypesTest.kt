@@ -16,3 +16,10 @@ class BluetoothTypesTest {
         assertFalse(BluetoothTypes.isBluetoothMedia(AudioDeviceInfo.TYPE_WIRED_HEADPHONES))
     }
 }
+
+class BluetoothTypesDescribeTest {
+    @Test fun describesSpeakerAndBluetooth() {
+        org.junit.Assert.assertEquals("phone speaker", BluetoothTypes.describe(AudioDeviceInfo.TYPE_BUILTIN_SPEAKER))
+        org.junit.Assert.assertEquals("Bluetooth A2DP", BluetoothTypes.describe(AudioDeviceInfo.TYPE_BLUETOOTH_A2DP))
+    }
+}

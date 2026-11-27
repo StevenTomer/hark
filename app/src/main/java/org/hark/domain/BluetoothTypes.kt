@@ -25,4 +25,19 @@ object BluetoothTypes {
         @Suppress("InlinedApi") AudioDeviceInfo.TYPE_BLE_SPEAKER -> 2
         else -> 3
     }
+
+    /** Short name of an output type, for the activity list. */
+    @Suppress("InlinedApi")
+    fun describe(type: Int): String = when (type) {
+        AudioDeviceInfo.TYPE_BUILTIN_SPEAKER -> "phone speaker"
+        AudioDeviceInfo.TYPE_BUILTIN_EARPIECE -> "phone earpiece"
+        AudioDeviceInfo.TYPE_BLUETOOTH_A2DP -> "Bluetooth A2DP"
+        AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> "Bluetooth call audio (SCO)"
+        AudioDeviceInfo.TYPE_BLE_HEADSET -> "Bluetooth LE headset"
+        AudioDeviceInfo.TYPE_BLE_SPEAKER -> "Bluetooth LE speaker"
+        AudioDeviceInfo.TYPE_HEARING_AID -> "hearing aid"
+        AudioDeviceInfo.TYPE_WIRED_HEADSET, AudioDeviceInfo.TYPE_WIRED_HEADPHONES -> "wired headphones"
+        AudioDeviceInfo.TYPE_USB_HEADSET, AudioDeviceInfo.TYPE_USB_DEVICE -> "USB audio"
+        else -> "output type $type"
+    }
 }

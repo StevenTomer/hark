@@ -50,7 +50,7 @@ fun HarkScreen(accessGranted: StateFlow<Boolean>, onOpenAccess: () -> Unit, onOp
     val container = LocalContext.current.appContainer
     val settings by container.settings.settings.collectAsStateWithLifecycle()
     val bluetooth by container.bluetooth.current.collectAsStateWithLifecycle()
-    val lastEvent by container.speaker.lastEvent.collectAsStateWithLifecycle()
+    val events by container.speaker.events.collectAsStateWithLifecycle()
     val granted by accessGranted.collectAsStateWithLifecycle()
     val scope = container.scope
 
@@ -87,7 +87,11 @@ fun HarkScreen(accessGranted: StateFlow<Boolean>, onOpenAccess: () -> Unit, onOp
                     Text(
                         bluetooth?.let { "✓ Bluetooth audio: ${it.displayName}" } ?: "✗ No Bluetooth audio connected: messages stay silent",
                     )
-                    lastEvent?.let { Text("Last: $it", style = MaterialTheme.typography.bodySmall) }
+                }
+
+                if (events.isNotEmpty()) Section {
+                    Text("Recent activity", style = MaterialTheme.typography.titleMedium)
+                    events.forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
                 }
 
                 Section {

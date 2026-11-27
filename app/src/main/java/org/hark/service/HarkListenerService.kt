@@ -10,6 +10,7 @@ import androidx.core.app.NotificationCompat
 import org.hark.appContainer
 import org.hark.domain.MessageExtractor
 import org.hark.domain.NotificationSnapshot
+import org.hark.domain.Source
 import org.hark.domain.SpeechText
 import org.hark.domain.Sources
 import org.hark.domain.StyleMessage
@@ -28,7 +29,10 @@ class HarkListenerService : NotificationListenerService() {
         val messages = MessageExtractor.extract(snapshot)
         val fresh = container.deduper.filterNew(snapshot.key, messages, System.currentTimeMillis())
         if (fresh.isEmpty()) return
-        main.post { fresh.forEach { container.speaker.speak(SpeechText.format(it)) } }
+        val app = if (source == Source.VOICE) "Google Voice message" else "Text message"
+        main.post {
+            fresh.forEach { container.speaker.speak(SpeechText.format(it), "$app from ${it.sender}") }
+        }
     }
 
     private fun snapshot(sbn: StatusBarNotification): NotificationSnapshot {
