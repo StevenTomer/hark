@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="hark_background">#0B1016</color>
+
+    <style name="Theme.Hark" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/hark_background</item>
+        <item name="android:statusBarColor">@color/hark_background</item>
+        <item name="android:navigationBarColor">@color/hark_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>
