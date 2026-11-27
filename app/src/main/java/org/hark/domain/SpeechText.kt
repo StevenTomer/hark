@@ -11,7 +11,6 @@ object SpeechText {
         }
         val lead = when {
             m.fromTitleOnly && m.sender.contains("voicemail", ignoreCase = true) -> m.sender
-            m.conversation != null -> "Message from ${m.sender} in ${m.conversation}"
             else -> "Message from ${m.sender}"
         }
         return if (m.text == null) "$lead $body" else "$lead: $body"

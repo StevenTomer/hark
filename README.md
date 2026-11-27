@@ -11,7 +11,7 @@ Requires Android 9 or later.
 - Text messages from your SMS app (Google Messages, Samsung Messages, or whatever your default SMS app is).
 - Google Voice texts and voicemail notifications.
 
-Each message is read as "Message from *sender*: *text*". In group chats it adds the group name. Very long messages are cut off at about 600 characters.
+Each message is read as "Message from *sender*: *text*". In group chats only the sender is named, not the other members. Very long messages are cut off at about 600 characters.
 
 ## How it works
 

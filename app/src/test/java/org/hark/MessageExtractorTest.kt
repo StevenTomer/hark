@@ -41,6 +41,18 @@ class MessageExtractorTest {
         assertTrue(m.fromTitleOnly)
     }
 
+    @Test fun titleListGroupUsesSenderFromText() {
+        val m = MessageExtractor.extract(snapshot(title = "Ann, Bob, Carol", text = "Bob: running late")).single()
+        assertEquals("Bob", m.sender)
+        assertEquals("running late", m.text)
+    }
+
+    @Test fun colonInOneToOneTextIsKept() {
+        val m = MessageExtractor.extract(snapshot(title = "Ann", text = "Note: bring chairs")).single()
+        assertEquals("Ann", m.sender)
+        assertEquals("Note: bring chairs", m.text)
+    }
+
     @Test fun skipsSummariesOngoingAndCalls() {
         val style = listOf(StyleMessage("Ann", "hi", 1, false))
         assertTrue(MessageExtractor.extract(snapshot(style = style, summary = true)).isEmpty())

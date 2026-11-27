@@ -10,8 +10,8 @@ class SpeechTextTest {
     @Test fun formatsSenderAndText() =
         assertEquals("Message from Ann: hi", SpeechText.format(IncomingMessage("Ann", "hi", null, 0)))
 
-    @Test fun formatsGroup() =
-        assertEquals("Message from Bob in Family: dinner?", SpeechText.format(IncomingMessage("Bob", "dinner?", "Family", 0)))
+    @Test fun groupReadsOnlyTheSender() =
+        assertEquals("Message from Bob: dinner?", SpeechText.format(IncomingMessage("Bob", "dinner?", "Ann, Bob, Carol", 0)))
 
     @Test fun formatsAttachment() =
         assertEquals("Message from Bob sent an attachment.", SpeechText.format(IncomingMessage("Bob", null, null, 0)))

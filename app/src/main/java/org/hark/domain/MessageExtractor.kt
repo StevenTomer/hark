@@ -6,6 +6,8 @@ object MessageExtractor {
         "call", "missed_call", "progress", "service", "status", "err", "sys", "transport", "alarm", "reminder", "event",
     )
 
+    private val senderPrefix = Regex("""([^:\n]{1,40}):\s+(.+)""", RegexOption.DOT_MATCHES_ALL)
+
     fun extract(n: NotificationSnapshot): List<IncomingMessage> {
         if (n.isGroupSummary || n.isOngoing) return emptyList()
         val style = n.styleMessages
@@ -19,6 +21,13 @@ object MessageExtractor {
         val text = n.text?.trim().orEmpty()
         if (title.isEmpty() || text.isEmpty()) return emptyList()
         val time = if (n.whenTime > 0) n.whenTime else n.postTime
+        // A group shown without MessagingStyle: the title lists the participants and the text is "Bob: hi".
+        // Read only the actual sender.
+        if (title.contains(',') || title.contains(" & ")) {
+            senderPrefix.matchEntire(text)?.let { match ->
+                return listOf(IncomingMessage(match.groupValues[1].trim(), match.groupValues[2].trim(), null, time))
+            }
+        }
         return listOf(IncomingMessage(title, text, null, time, fromTitleOnly = true))
     }
 }
