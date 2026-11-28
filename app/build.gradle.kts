@@ -15,8 +15,8 @@ android {
         // Route verification (MediaPlayer.setPreferredDevice + routing callbacks) needs API 28.
         minSdk = 28
         targetSdk = 37
-        versionCode = 4
-        versionName = "0.2.1"
+        versionCode = 5
+        versionName = "0.3.0"
     }
     buildFeatures { compose = true }
 
